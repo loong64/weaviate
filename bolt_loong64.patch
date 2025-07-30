@@ -1,0 +1,30 @@
+diff --git a/Dockerfile b/Dockerfile
+index 6798816..36a6ed2 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -4,7 +4,7 @@
+ 
+ ###############################################################################
+ # Base build image
+-FROM golang:1.24-alpine AS build_base
++FROM ghcr.io/loong64/golang:1.24-alpine AS build_base
+ RUN apk add bash ca-certificates git gcc g++ libc-dev
+ WORKDIR /go/src/github.com/weaviate/weaviate
+ ENV GO111MODULE=on
+@@ -26,6 +26,7 @@ ARG CGO_ENABLED=1
+ # Allow disabling CGO when compiling for arm64
+ ENV CGO_ENABLED=$CGO_ENABLED
+ COPY . .
++RUN cp -f /go/pkg/mod/github.com/boltdb/bolt@v1.3.1/bolt_amd64.go /go/pkg/mod/github.com/boltdb/bolt@v1.3.1/bolt_loong64.go
+ RUN GOOS=linux GOARCH=$TARGETARCH go build $EXTRA_BUILD_ARGS \
+       -ldflags '-w -extldflags "-static" \
+       -X github.com/weaviate/weaviate/usecases/build.Branch='"$GIT_BRANCH"' \
+@@ -43,7 +44,7 @@ ENTRYPOINT ["./tools/dev/telemetry_mock_api.sh"]
+ 
+ ###############################################################################
+ # Weaviate (no differentiation between dev/test/prod - 12 factor!)
+-FROM alpine AS weaviate
++FROM ghcr.io/loong64/alpine AS weaviate
+ ENTRYPOINT ["/bin/weaviate"]
+ COPY --from=server_builder /weaviate-server /bin/weaviate
+ RUN mkdir -p /go/pkg/mod/github.com/go-ego
