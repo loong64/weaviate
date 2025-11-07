@@ -1,30 +1,30 @@
 diff --git a/Dockerfile b/Dockerfile
-index 6798816..36a6ed2 100644
+index 9eee7b2..52632b1 100644
 --- a/Dockerfile
 +++ b/Dockerfile
-@@ -4,7 +4,7 @@
+@@ -5,7 +5,7 @@
  
  ###############################################################################
  # Base build image
--FROM golang:1.24-alpine AS build_base
-+FROM ghcr.io/loong64/golang:1.24-alpine AS build_base
- RUN apk add bash ca-certificates git gcc g++ libc-dev
- WORKDIR /go/src/github.com/weaviate/weaviate
+-FROM golang:1.24-alpine3.22 AS build_base
++FROM ghcr.io/loong64/golang:1.24-alpine3.22 AS build_base
  ENV GO111MODULE=on
-@@ -26,6 +26,7 @@ ARG CGO_ENABLED=1
- # Allow disabling CGO when compiling for arm64
+ RUN apk add --no-cache bash ca-certificates git gcc g++ libc-dev
+ WORKDIR /go/src/github.com/weaviate/weaviate
+@@ -27,6 +27,7 @@ ARG EXTRA_BUILD_ARGS=""
+ ARG CGO_ENABLED=1
  ENV CGO_ENABLED=$CGO_ENABLED
  COPY . .
 +RUN cp -f /go/pkg/mod/github.com/boltdb/bolt@v1.3.1/bolt_amd64.go /go/pkg/mod/github.com/boltdb/bolt@v1.3.1/bolt_loong64.go
- RUN GOOS=linux GOARCH=$TARGETARCH go build $EXTRA_BUILD_ARGS \
-       -ldflags '-w -extldflags "-static" \
-       -X github.com/weaviate/weaviate/usecases/build.Branch='"$GIT_BRANCH"' \
-@@ -43,7 +44,7 @@ ENTRYPOINT ["./tools/dev/telemetry_mock_api.sh"]
+ RUN GOOS=linux GOARCH=${TARGETARCH} \
+     go build $EXTRA_BUILD_ARGS -trimpath \
+       -ldflags="-s -w -extldflags '-static' \
+@@ -48,7 +49,7 @@ ENTRYPOINT ["./tools/dev/telemetry_mock_api.sh"]
  
  ###############################################################################
  # Weaviate (no differentiation between dev/test/prod - 12 factor!)
--FROM alpine AS weaviate
-+FROM ghcr.io/loong64/alpine AS weaviate
- ENTRYPOINT ["/bin/weaviate"]
+-FROM alpine:3.22 AS weaviate
++FROM ghcr.io/loong64/alpine:3.22 AS weaviate
+ RUN apk add --no-cache bc ca-certificates openssl && mkdir ./modules
  COPY --from=server_builder /weaviate-server /bin/weaviate
- RUN mkdir -p /go/pkg/mod/github.com/go-ego
+ COPY --from=server_builder /runtime/go-ego/ /go/pkg/mod/github.com/go-ego/
