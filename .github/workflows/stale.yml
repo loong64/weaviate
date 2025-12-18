@@ -57,7 +57,7 @@ jobs:
           echo "Current Version: ${version}"
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: weaviate/weaviate
           ref: ${{ env.version }}
@@ -70,6 +70,10 @@ jobs:
           echo "BUILD_USER=ci" >> $GITHUB_ENV
           echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
           echo "IMAGE_TAG=${version/v/}" >> $GITHUB_ENV
+
+          sed -i 's@FROM golang@FROM ghcr.io/loong64/golang@g' Dockerfile
+          sed -i 's@FROM alpine@FROM ghcr.io/loong64/alpine@g' Dockerfile
+
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
 
